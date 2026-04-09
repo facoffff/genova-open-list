@@ -210,6 +210,7 @@
 
     // ===== STATE =====
     let data = { vessels: { atlantic: [], pacific: [] }, cargoes: { atlantic: [], pacific: [] } };
+    const ALLOWED_BROKERS = new Set(["MPE", "LCE", "OPE", "BEE"]);
     let allBrokers = new Set();
     let activeBrokers = new Set();
     let currentRegionFilter = "all";
@@ -286,7 +287,7 @@
                 const brokerRaw = (row[8] || "").trim().toUpperCase();
                 const brokerList = brokerRaw ? brokerRaw.split("/").map(b => b.trim()).filter(b => b) : [];
                 const flagS = (row[11] || "").trim().toUpperCase();
-                brokerList.forEach(b => brokers.add(b));
+                brokerList.forEach(b => { if (ALLOWED_BROKERS.has(b)) brokers.add(b); });
                 result.vessels[vesselSection].push({
                     name: colA,
                     dwt: (row[1] || "").trim(),
@@ -307,7 +308,7 @@
                 const brokerRaw = (row[20] || "").trim().toUpperCase();
                 const brokerList = brokerRaw ? brokerRaw.split("/").map(b => b.trim()).filter(b => b) : [];
                 const flagS = (row[23] || "").trim().toUpperCase();
-                brokerList.forEach(b => brokers.add(b));
+                brokerList.forEach(b => { if (ALLOWED_BROKERS.has(b)) brokers.add(b); });
                 result.cargoes[cargoSection].push({
                     charterer: colM,
                     laycanStart: (row[13] || "").trim(),
