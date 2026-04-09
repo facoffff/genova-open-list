@@ -24,6 +24,29 @@
             --border-light: #2d3a4f;
             --glass: rgba(17, 24, 39, 0.7);
         }
+        html[data-theme="light"] {
+            --bg-primary: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-header: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --border-light: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+        html[data-theme="light"] .bg-animation { opacity: 0.35; }
+        .theme-toggle { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; z-index: 5; }
+        .theme-toggle:hover { border-color: var(--accent-cyan); transform: scale(1.05); }
+        tr.broker-row-MPE td { background: rgba(59,130,246,0.07); }
+        tr.broker-row-LCE td { background: rgba(16,185,129,0.07); }
+        tr.broker-row-OPE td { background: rgba(245,158,11,0.07); }
+        tr.broker-row-BEE td { background: rgba(236,72,153,0.07); }
+        tr.broker-row-MPE:hover td { background: rgba(59,130,246,0.12); }
+        tr.broker-row-LCE:hover td { background: rgba(16,185,129,0.12); }
+        tr.broker-row-OPE:hover td { background: rgba(245,158,11,0.12); }
+        tr.broker-row-BEE:hover td { background: rgba(236,72,153,0.12); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -148,6 +171,7 @@
 
     <div class="container">
         <div class="header">
+            <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
             <h1>GENOVA OPEN LIST</h1>
             <div class="subtitle">Tonnage &amp; Cargo Overview</div>
             <div class="update-info">Last updated: <span id="updateDate"></span> &mdash; <a href="#" onclick="loadData(); return false;" style="color: var(--accent-cyan); text-decoration: none;">&#x21bb; Refresh</a></div>
@@ -364,7 +388,22 @@
     }
 
     // ===== FETCH DATA (JSONP - bypasses CORS) =====
-    function loadData() {
+    function toggleTheme() {
+            const html = document.documentElement;
+            const cur = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', cur);
+            try { localStorage.setItem('theme', cur); } catch(e) {}
+            document.getElementById('themeToggle').textContent = cur === 'light' ? '☀️' : '🌙';
+        }
+        (function() {
+            try {
+                const saved = localStorage.getItem('theme');
+                if (saved === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch(e) {}
+        })();
+        function loadData() {
         const overlay = document.getElementById("loadingOverlay");
         const errorBanner = document.getElementById("errorBanner");
         overlay.classList.remove("hidden");
@@ -487,7 +526,7 @@
             filtered.forEach(v => {
                 count++;
                 const tr = document.createElement("tr");
-                if (v.highlight) tr.className = "highlight-row";
+                tr.className = (v.highlight ? "highlight-row " : "") + "broker-row-" + v.brokers[0];
                 tr.innerHTML = `
                     <td class="vessel-name">${v.name}</td>
                     <td>${v.dwt}</td>
@@ -522,7 +561,7 @@
             filtered.forEach(c => {
                 count++;
                 const tr = document.createElement("tr");
-                if (c.highlight) tr.className = "highlight-row";
+                tr.className = (c.highlight ? "highlight-row " : "") + "broker-row-" + c.brokers[0];
                 const regionCls = getRegionClass(c.delivery);
                 tr.innerHTML = `
                     <td class="charterer-name">${c.charterer}</td>
