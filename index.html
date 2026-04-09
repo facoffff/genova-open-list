@@ -69,6 +69,14 @@
         .broker-LCE { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.4); }
         .broker-OPE { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
         .broker-BEE { background: rgba(236,72,153,0.18); color: #f472b6; border: 1px solid rgba(236,72,153,0.4); }
+        .broker-toggle.broker-MPE { border-color: rgba(59,130,246,0.5); color: #60a5fa; }
+        .broker-toggle.broker-MPE.active { background: rgba(59,130,246,0.2); color: #93c5fd; box-shadow: 0 0 20px rgba(59,130,246,0.25); }
+        .broker-toggle.broker-LCE { border-color: rgba(16,185,129,0.5); color: #34d399; }
+        .broker-toggle.broker-LCE.active { background: rgba(16,185,129,0.2); color: #6ee7b7; box-shadow: 0 0 20px rgba(16,185,129,0.25); }
+        .broker-toggle.broker-OPE { border-color: rgba(245,158,11,0.5); color: #fbbf24; }
+        .broker-toggle.broker-OPE.active { background: rgba(245,158,11,0.2); color: #fcd34d; box-shadow: 0 0 20px rgba(245,158,11,0.25); }
+        .broker-toggle.broker-BEE { border-color: rgba(236,72,153,0.5); color: #f472b6; }
+        .broker-toggle.broker-BEE.active { background: rgba(236,72,153,0.2); color: #f9a8d4; box-shadow: 0 0 20px rgba(236,72,153,0.25); }
         .broker-NPA { background: rgba(59,130,246,0.15); color: #60a5fa; }
         .broker-ASC { background: rgba(245,158,11,0.15); color: #fbbf24; }
         .broker-MWE { background: rgba(139,92,246,0.15); color: #a78bfa; }
@@ -194,7 +202,7 @@
                 <div class="table-scroll">
                     <table class="data-table">
                         <thead><tr>
-                            <th>Charterer</th><th>Laycan</th><th>Load</th><th>Discharge</th><th>Commodity</th><th>Size</th><th>Broker</th><th>Delivery</th>
+                            <th>Charterer</th><th>Laycan</th><th>Load</th><th>Discharge</th><th>Commodity</th><th>Size</th><th>Broker</th>
                         </tr></thead>
                         <tbody id="cargoesBody"></tbody>
                     </table>
@@ -437,10 +445,10 @@
         [...data.vessels.atlantic, ...data.vessels.pacific].forEach(v => { v.brokers.forEach(b => { if (counts[b] !== undefined) counts[b]++; }); });
         [...data.cargoes.atlantic, ...data.cargoes.pacific].forEach(c => { c.brokers.forEach(b => { if (counts[b] !== undefined) counts[b]++; }); });
 
-        const sorted = [...allBrokers].sort();
+        const sorted = ["MPE","LCE","OPE","BEE"].filter(function(b){return allBrokers.has(b);});
         sorted.forEach(broker => {
             const btn = document.createElement("button");
-            btn.className = "broker-toggle" + (activeBrokers.has(broker) ? " active" : "");
+            btn.className = "broker-toggle broker-" + broker + (activeBrokers.has(broker) ? " active" : "");
             btn.innerHTML = `${broker}<span class="broker-count">${counts[broker]}</span>`;
             btn.onclick = () => { toggleBroker(broker); };
             container.appendChild(btn);
@@ -509,7 +517,7 @@
             if (filtered.length === 0) return;
             const divRow = document.createElement("tr");
             divRow.className = "section-divider";
-            divRow.innerHTML = `<td colspan="8">${section.label}</td>`;
+            divRow.innerHTML = `<td colspan="7">${section.label}</td>`;
             tbody.appendChild(divRow);
             filtered.forEach(c => {
                 count++;
@@ -524,7 +532,7 @@
                     <td>${c.commodity}</td>
                     <td>${c.size || "\u2014"}</td>
                     <td><span class="broker-badge broker-${c.brokers[0] || ''}">${c.broker}</span></td>
-                    <td><span class="region-badge ${regionCls}">${c.delivery}</span></td>
+                    
                 `;
                 tbody.appendChild(tr);
             });
