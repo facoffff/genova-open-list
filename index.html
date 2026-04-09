@@ -283,9 +283,10 @@
             // Parse vessel if col A has a real name (not a section header)
             const isVesselHeader = colAup === "ATLANTIC VSL" || colAup === "PACIFIC VSL" || colAup.startsWith("VESSELS") || colAup === "PACIFIC VSL " || colAup === "ATLANTIC VSL ";
             if (colA && !isVesselHeader) {
-                const broker = (row[8] || "").trim().toUpperCase();
+                const brokerRaw = (row[8] || "").trim().toUpperCase();
+                const brokerList = brokerRaw ? brokerRaw.split("/").map(b => b.trim()).filter(b => b) : [];
                 const flagS = (row[11] || "").trim().toUpperCase();
-                if (broker) brokers.add(broker);
+                brokerList.forEach(b => brokers.add(b));
                 result.vessels[vesselSection].push({
                     name: colA,
                     dwt: (row[1] || "").trim(),
@@ -294,7 +295,8 @@
                     eta: (row[4] || "").trim(),
                     notes: (row[5] || "").trim(),
                     owner: (row[6] || "").trim(),
-                    broker: broker,
+                    broker: brokerRaw,
+                    brokers: brokerList,
                     highlight: flagS === "S"
                 });
             }
@@ -302,9 +304,10 @@
             // Parse cargo if col M has a real name (not a section header)
             const isCargoHeader = colMup === "ATLANTIC CGO" || colMup === "PACIFIC CGO" || colMup.startsWith("CARGOES") || colMup === "PACIFIC CGO " || colMup === "ATLANTIC CGO ";
             if (colM && !isCargoHeader) {
-                const broker = (row[20] || "").trim().toUpperCase();
+                const brokerRaw = (row[20] || "").trim().toUpperCase();
+                const brokerList = brokerRaw ? brokerRaw.split("/").map(b => b.trim()).filter(b => b) : [];
                 const flagS = (row[23] || "").trim().toUpperCase();
-                if (broker) brokers.add(broker);
+                brokerList.forEach(b => brokers.add(b));
                 result.cargoes[cargoSection].push({
                     charterer: colM,
                     laycanStart: (row[13] || "").trim(),
@@ -313,7 +316,8 @@
                     dischargePort: (row[16] || "").trim(),
                     commodity: (row[17] || "").trim(),
                     size: (row[18] || "").trim(),
-                    broker: broker,
+                    broker: brokerRaw,
+                    brokers: brokerList,
                     delivery: (row[22] || "").trim(),
                     highlight: flagS === "S"
                 });
@@ -425,8 +429,8 @@
         container.innerHTML = "";
         const counts = {};
         allBrokers.forEach(b => counts[b] = 0);
-        [...data.vessels.atlantic, ...data.vessels.pacific].forEach(v => { if (counts[v.broker] !== undefined) counts[v.broker]++; });
-        [...data.cargoes.atlantic, ...data.cargoes.pacific].forEach(c => { if (counts[c.broker] !== undefined) counts[c.broker]++; });
+        [...data.vessels.atlantic, ...data.vessels.pacific].forEach(v => { v.brokers.forEach(b => { if (counts[b] !== undefined) counts[b]++; }); });
+        [...data.cargoes.atlantic, ...data.cargoes.pacific].forEach(c => { c.brokers.forEach(b => { if (counts[b] !== undefined) counts[b]++; }); });
 
         const sorted = [...allBrokers].sort();
         sorted.forEach(broker => {
@@ -461,7 +465,7 @@
         if (filter === "all" || filter === "pacific") sections.push({ label: "Pacific Vessels", data: data.vessels.pacific });
 
         sections.forEach(section => {
-            const filtered = section.data.filter(v => activeBrokers.has(v.broker));
+            const filtered = section.data.filter(v => v.brokers.some(b => activeBrokers.has(b)));
             if (filtered.length === 0) return;
             const divRow = document.createElement("tr");
             divRow.className = "section-divider";
@@ -477,7 +481,7 @@
                     <td>${v.position}</td>
                     <td class="date-cell">${v.open}</td>
                     <td class="date-cell">${v.eta}</td>
-                    <td><span class="broker-badge broker-${v.broker}">${v.broker}</span></td>
+                    <td><span class="broker-badge broker-${v.brokers[0] || ''}">${v.broker}</span></td>
                     <td class="notes-cell" title="${v.notes}">${v.notes || "\u2014"}</td>
                 `;
                 tbody.appendChild(tr);
@@ -496,7 +500,7 @@
         if (filter === "all" || filter === "pacific") sections.push({ label: "Pacific Cargoes", data: data.cargoes.pacific });
 
         sections.forEach(section => {
-            const filtered = section.data.filter(c => activeBrokers.has(c.broker));
+            const filtered = section.data.filter(c => c.brokers.some(b => activeBrokers.has(b)));
             if (filtered.length === 0) return;
             const divRow = document.createElement("tr");
             divRow.className = "section-divider";
@@ -514,7 +518,7 @@
                     <td>${c.dischargePort}</td>
                     <td>${c.commodity}</td>
                     <td>${c.size || "\u2014"}</td>
-                    <td><span class="broker-badge broker-${c.broker}">${c.broker}</span></td>
+                    <td><span class="broker-badge broker-${c.brokers[0] || ''}">${c.broker}</span></td>
                     <td><span class="region-badge ${regionCls}">${c.delivery}</span></td>
                 `;
                 tbody.appendChild(tr);
